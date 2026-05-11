@@ -328,9 +328,12 @@ class App {
         if (this.columnSplitter) this.columnSplitter.destroy();
         if (this.ioSplitter) this.ioSplitter.destroy();
 
+        const compactLayout = window.matchMedia("(max-width: 1180px)").matches;
+        document.body.classList.toggle("ztools-compact-layout", compactLayout);
+
         this.columnSplitter = Split(["#operations", "#recipe", "#IO"], {
-            sizes: [20, 30, 50],
-            minSize: minimise ? [0, 0, 0] : [240, 310, 450],
+            sizes: compactLayout ? [18, 32, 50] : [20, 30, 50],
+            minSize: minimise ? [0, 0, 0] : compactLayout ? [150, 240, 320] : [240, 310, 450],
             gutterSize: 4,
             expandToMin: true,
             onDrag: debounce(function() {
@@ -639,7 +642,11 @@ class App {
      * Resets the splitter positions to default.
      */
     resetLayout() {
-        this.columnSplitter.setSizes([20, 30, 50]);
+        if (document.body.classList.contains("ztools-compact-layout")) {
+            this.columnSplitter.setSizes([18, 32, 50]);
+        } else {
+            this.columnSplitter.setSizes([20, 30, 50]);
+        }
         this.ioSplitter.setSizes([50, 50]);
         this.adjustComponentSizes();
     }

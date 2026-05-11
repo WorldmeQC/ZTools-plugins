@@ -157,10 +157,10 @@ class AddTextToImage extends Operation {
             ];
 
             await Promise.all(fonts).then((fonts) => {
-                fontsMap.Roboto = fonts[0];
-                fontsMap["Roboto Black"] = fonts[1];
-                fontsMap["Roboto Mono"] = fonts[2];
-                fontsMap["Roboto Slab"] = fonts[3];
+                fontsMap.Roboto = fonts[0].default || fonts[0];
+                fontsMap["Roboto Black"] = fonts[1].default || fonts[1];
+                fontsMap["Roboto Mono"] = fonts[2].default || fonts[2];
+                fontsMap["Roboto Slab"] = fonts[3].default || fonts[3];
             });
             // Make Webpack load the png font images
             await Promise.all([
@@ -186,7 +186,7 @@ class AddTextToImage extends Operation {
             const font = fontsMap[fontFace];
 
             // LoadFont needs an absolute url, so append the font name to self.docURL
-            jimpFont = await loadFont(self.docURL + "/" + font.default);
+            jimpFont = await loadFont(self.docURL + "/" + font);
 
             jimpFont.pages.forEach(function (page) {
                 if (page.bitmap) {

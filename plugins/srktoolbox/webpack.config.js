@@ -118,6 +118,7 @@ module.exports = {
         extensions: [".mjs", ".js", ".json"], // Allows importing files without extensions
         alias: {
             jquery: "jquery/src/jquery",
+            "jimp$": path.resolve(__dirname, "node_modules/jimp/dist/esm/index.js"),
         },
         fallback: {
             "assert": require.resolve("assert/"),
@@ -142,11 +143,12 @@ module.exports = {
         rules: [
             {
                 test: /\.m?js$/,
-<<<<<<< HEAD
-                exclude: /node_modules[\\/](?!crypto-api|bootstrap)/,
-=======
                 exclude: /node_modules\/(?!crypto-api|bootstrap)/,
->>>>>>> 334f3fc (first commit)
+                include: [
+                    path.resolve(__dirname, "src"),
+                    path.resolve(__dirname, "node_modules/crypto-api"),
+                    path.resolve(__dirname, "node_modules/bootstrap")
+                ],
                 options: {
                     configFile: path.resolve(__dirname, "babel.config.js"),
                     cacheDirectory: true,
@@ -209,32 +211,23 @@ module.exports = {
                 type: "asset/inline",
             },
             { // Store font .fnt and .png files in a separate fonts folder
-<<<<<<< HEAD
-                test: /(\.fnt$|bmfonts[\\/].+\.png$)/,
-=======
                 test: /(\.fnt$|bmfonts\/.+\.png$)/,
->>>>>>> 334f3fc (first commit)
                 type: "asset/resource",
                 generator: {
                     filename: "assets/fonts/[name][ext]"
                 }
             },
+            { // Third party images are inlined
+                test: /node_modules.*\.(png|jpg|gif)$/,
+                type: "asset/inline",
+            },
             { // First party images are saved as files to be cached
-                test: /\.(png|jpg|gif)$/,
-                exclude: /(node_modules|bmfonts)/,
+                test: /(?<!bmfonts\/.*)\.(png|jpg|gif)$/,
+                exclude: /node_modules/,
                 type: "asset/resource",
                 generator: {
                     filename: "images/[name][ext]"
                 }
-            },
-            { // Third party images are inlined
-                test: /\.(png|jpg|gif)$/,
-<<<<<<< HEAD
-                exclude: /(web[\\/]static|bmfonts)/,
-=======
-                exclude: /web\/static/,
->>>>>>> 334f3fc (first commit)
-                type: "asset/inline",
             },
             {
                 test: /\.m?js$/,

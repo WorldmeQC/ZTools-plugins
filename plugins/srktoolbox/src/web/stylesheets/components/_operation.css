@@ -35,7 +35,7 @@
 }
 
 .ing-very-wide {
-    flex: 4 400px;
+    flex: 4 280px;
 }
 
 .ing-wide {
@@ -323,4 +323,29 @@ input.toggle-string {
 .disabled .register-list {
     color: var(--disabled-font-colour) !important;
     background-color: var(--disabled-border-colour) !important;
+}
+
+@media (max-width: 720px) {
+    #rec-list .operation {
+        padding: 10px;
+    }
+
+    .ingredients {
+        column-gap: 8px;
+    }
+
+    .ing-very-wide,
+    .ing-wide,
+    .ing-medium,
+    .ing-short {
+        flex-basis: 100%;
+    }
+
+    select.arg {
+        min-width: 0;
+    }
+
+    .recip-icons i {
+        margin-right: 6px;
+    }
 }

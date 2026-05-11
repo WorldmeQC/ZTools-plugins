@@ -34,6 +34,13 @@ module.exports = function (grunt) {
             "copy:standalone", "zip:standalone", "clean:standalone", "exec:calcDownloadHash", "chmod"
         ]);
 
+    grunt.registerTask("ztools",
+        "Creates a ZTools plugin build in dist.",
+        [
+            "eslint", "clean:ztools", "clean:prod", "clean:config", "exec:generateConfig", "findModules", "webpack:web",
+            "copy:ztools", "zip:ztools", "chmod"
+        ]);
+
     grunt.registerTask("node",
         "Compiles CyberChef into a single NodeJS module.",
         [
@@ -111,6 +118,9 @@ module.exports = function (grunt) {
                 entry: Object.assign({
                     main: "./src/web/index.js"
                 }, moduleEntryPoints),
+                optimization: {
+                    minimize: false
+                },
                 output: {
                     path: __dirname + "/build/prod",
                     filename: chunkData => {
@@ -188,6 +198,7 @@ module.exports = function (grunt) {
         clean: {
             dev: ["build/dev/*"],
             prod: ["build/prod/*"],
+            ztools: ["dist/*", "build/SRK_Toolbox_ZTools_v*.zip"],
             node: ["build/node/*"],
             config: ["src/core/config/OperationConfig.json", "src/core/config/modules/*", "src/code/operations/index.mjs"],
             nodeConfig: ["src/node/index.mjs", "src/node/config/OperationConfig.json"],
@@ -249,6 +260,14 @@ module.exports = function (grunt) {
                 ],
                 dest: `build/prod/SRK_Toolbox_v${pkg.version}.zip`,
                 compression: "DEFLATE"
+            },
+            ztools: {
+                cwd: "dist/",
+                src: [
+                    "dist/**/*"
+                ],
+                dest: `build/SRK_Toolbox_ZTools_v${pkg.version}.zip`,
+                compression: "DEFLATE"
             }
         },
         connect: {
@@ -308,6 +327,32 @@ module.exports = function (grunt) {
                         dest: `build/prod/SRK_Toolbox_v${pkg.version}.html`
                     }
                 ]
+            },
+            ztools: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: "build/prod/",
+                        src: [
+                            "**/*",
+                            "!*.gz",
+                            "!*.br",
+                            "!**/*.gz",
+                            "!**/*.br",
+                            "!BundleAnalyzerReport.html",
+                            "!SRK_Toolbox_v*.html",
+                            "!SRK_Toolbox_v*.zip",
+                            "!sha256digest.txt"
+                        ],
+                        dest: "dist/"
+                    },
+                    {
+                        src: ["plugin.json", "public/logo.png"],
+                        dest: "dist/",
+                        flatten: true,
+                        expand: true
+                    }
+                ]
             }
         },
         chmod: {
@@ -315,7 +360,7 @@ module.exports = function (grunt) {
                 options: {
                     mode: "755",
                 },
-                src: ["build/**/*", "build/"]
+                src: ["build/**/*", "build/", "dist/**/*", "dist/"]
             }
         },
         watch: {
@@ -414,25 +459,11 @@ module.exports = function (grunt) {
                 stdout: false,
             },
             fixCryptoApiImports: {
-                command: function () {
-                    switch (process.platform) {
-                        case "darwin":
-                            return `find ./node_modules/crypto-api/src/ \\( -type d -name .git -prune \\) -o -type f -print0 | xargs -0 sed -i '' -e '/\\.mjs/!s/\\(from "\\.[^"]*\\)";/\\1.mjs";/g'`;
-                        default:
-                            return `find ./node_modules/crypto-api/src/ \\( -type d -name .git -prune \\) -o -type f -print0 | xargs -0 sed -i -e '/\\.mjs/!s/\\(from "\\.[^"]*\\)";/\\1.mjs";/g'`;
-                    }
-                },
+                cmd: "node scripts/fixCryptoApiImports.cjs",
                 stdout: false
             },
             fixSnackbarMarkup: {
-                command: function () {
-                    switch (process.platform) {
-                        case "darwin":
-                            return `sed -i '' 's/<div id=snackbar-container\\/>/<div id=snackbar-container>/g' ./node_modules/snackbarjs/src/snackbar.js`;
-                        default:
-                            return `sed -i 's/<div id=snackbar-container\\/>/<div id=snackbar-container>/g' ./node_modules/snackbarjs/src/snackbar.js`;
-                    }
-                },
+                cmd: "node scripts/fixSnackbarMarkup.cjs",
                 stdout: false
             },
         },

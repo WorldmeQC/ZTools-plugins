@@ -40,7 +40,7 @@ npm run dev
 生产构建会生成 ZTools 可用的插件包和普通离线包：
 
 ```bash
-npm run build
+npm run build:ztools
 ```
 
 构建完成后，产物位于：

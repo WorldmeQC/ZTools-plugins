@@ -41,3 +41,32 @@
 .op-list .operation:hover {
     filter: brightness(98%);
 }
+
+.ztools-compact-layout #operations h5 {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+}
+
+.ztools-compact-layout #search {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.ztools-compact-layout #categories a {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ztools-compact-layout #edit-favourites {
+    display: none;
+}
+
+.ztools-compact-layout .op-list .operation {
+    padding: 5px 6px;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

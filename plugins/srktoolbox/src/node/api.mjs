@@ -10,11 +10,7 @@
 
 import NodeDish from "./NodeDish.mjs";
 import NodeRecipe from "./NodeRecipe.mjs";
-<<<<<<< HEAD
 import OperationConfig from "../core/config/OperationConfig.json" with {type: "json"};
-=======
-import OperationConfig from "../core/config/OperationConfig.json" assert {type: "json"};
->>>>>>> 334f3fc (first commit)
 import { sanitise, removeSubheadingsFromArray, sentenceToCamelCase } from "./apiUtils.mjs";
 import ExcludedOperationError from "../core/errors/ExcludedOperationError.mjs";
 

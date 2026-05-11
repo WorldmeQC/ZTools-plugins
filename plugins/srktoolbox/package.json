@@ -1,7 +1,7 @@
 {
   "name": "srktoolbox",
   "version": "10.22.1",
-  "description": "SRK Toolbox - a web app (based on CyberChef) for encryption, encoding, compression and data analysis, translated to Chinese locale",
+  "description": "SRK Toolbox for ztools - a web plugin (based on CyberChef) for encryption, encoding, compression and data analysis, translated to Chinese locale",
   "author": "Raka-loah&&LAOBILAXI233",
   "homepage": "https://github.com/Raka-loah/SRK-Toolbox",
   "copyright": "Crown copyright 2016 / Zack Zhou copyright 2026",
@@ -197,6 +197,7 @@
   "scripts": {
     "start": "npx grunt dev",
     "build": "npx grunt prod",
+    "build:ztools": "npx grunt ztools",
     "node": "npx grunt node",
     "repl": "node --experimental-modules --experimental-json-modules --experimental-specifier-resolution=node --no-experimental-fetch --no-warnings src/node/repl.mjs",
     "test": "npx grunt configTests && node --experimental-modules --experimental-json-modules --no-warnings --no-deprecation --openssl-legacy-provider --no-experimental-fetch tests/node/index.mjs && node --experimental-modules --experimental-json-modules --no-warnings --no-deprecation --openssl-legacy-provider --no-experimental-fetch --trace-uncaught tests/operations/index.mjs",

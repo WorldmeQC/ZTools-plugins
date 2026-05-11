@@ -7,21 +7,13 @@
  */
 
 body {
-<<<<<<< HEAD
-    overflow: auto;
-=======
     overflow: hidden;
->>>>>>> 334f3fc (first commit)
 }
 
 #content-wrapper {
     position: absolute;
     top: 0;
     left: 0;
-<<<<<<< HEAD
-    min-width: 1180px;
-=======
->>>>>>> 334f3fc (first commit)
     width: 100%;
     height: 100%;
 }
@@ -60,6 +52,22 @@ div#output {
 .split.split-horizontal, .gutter.gutter-horizontal {
     height: 100%;
     float: left;
+}
+
+.ztools-compact-layout #workspace-wrapper {
+    overflow: hidden;
+}
+
+.ztools-compact-layout #operations {
+    min-width: 0;
+}
+
+.ztools-compact-layout #recipe {
+    min-width: 0;
+}
+
+.ztools-compact-layout #IO {
+    min-width: 0;
 }
 
 .gutter {
