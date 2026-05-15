@@ -145,17 +145,17 @@ async function getWindowsFonts() {
 // 通过 window 对象向渲染进程注入 nodejs 能力
 window.services = {
   // 读文件
-  readFile(file) {
-    return fs.readFileSync(file, { encoding: 'utf-8' })
+  async readFile(file) {
+    return fs.promises.readFile(file, { encoding: 'utf-8' })
   },
   // 文本写入到下载目录
-  writeTextFile(text, filename = `${Date.now().toString()}.txt`) {
+  async writeTextFile(text, filename = `${Date.now().toString()}.txt`) {
     const filePath = path.join(window.ztools.getPath('downloads'), path.basename(filename))
-    fs.writeFileSync(filePath, text, { encoding: 'utf-8' })
+    await fs.promises.writeFile(filePath, text, { encoding: 'utf-8' })
     return filePath
   },
   // 图片写入到下载目录
-  writeImageFile(base64Url, filename) {
+  async writeImageFile(base64Url, filename) {
     const imageBase64Match = /^data:image\/([a-z]{1,20});base64,/i.exec(base64Url)
     const svgBase64Match = /^data:image\/svg\+xml(?:;charset=[^;,]+)?;base64,/i.exec(base64Url)
     const svgMatch = /^data:image\/svg\+xml(?:;charset=[^;,]+)?,/i.exec(base64Url)
@@ -165,15 +165,19 @@ window.services = {
     const filePath = path.join(window.ztools.getPath('downloads'), baseName)
 
     if (svgMatch) {
-      fs.writeFileSync(filePath, decodeURIComponent(base64Url.substring(svgMatch[0].length)), {
+      await fs.promises.writeFile(filePath, decodeURIComponent(base64Url.substring(svgMatch[0].length)), {
         encoding: 'utf-8',
       })
       return filePath
     }
 
-    if (!base64Match) return
+    if (!base64Match) {
+      throw new Error('Unsupported image data URL.')
+    }
 
-    fs.writeFileSync(filePath, base64Url.substring(base64Match[0].length), { encoding: 'base64' })
+    await fs.promises.writeFile(filePath, base64Url.substring(base64Match[0].length), {
+      encoding: 'base64',
+    })
     return filePath
   },
   async getSystemFonts() {

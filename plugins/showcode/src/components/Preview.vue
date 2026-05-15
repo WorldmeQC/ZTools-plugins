@@ -326,12 +326,12 @@ function saveAs(method) {
         toSvg: 'svg',
     }[method];
 
-    generateImageFromPreview(method, preferences.exportPixelRatio).then((dataUrl) => {
+    generateImageFromPreview(method, preferences.exportPixelRatio).then(async (dataUrl) => {
         const filename = name.value || title.value || 'Untitled-1';
         const file = `${filename}.${extension}`;
 
         if (window.services?.writeImageFile) {
-            window.services.writeImageFile(dataUrl, file);
+            await window.services.writeImageFile(dataUrl, file);
             window.ztools?.showNotification?.(`Saved ${file}`);
             return;
         }

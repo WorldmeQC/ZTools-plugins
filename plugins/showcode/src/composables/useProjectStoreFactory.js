@@ -5,9 +5,9 @@ import { namespace } from './useProjectStores';
 import useTemplateStore from './useTemplateStore';
 import { cloneDeep, replace } from 'lodash';
 
-function saveTextFile(text, filename) {
+async function saveTextFile(text, filename) {
     if (window.services?.writeTextFile) {
-        const filePath = window.services.writeTextFile(text, filename);
+        const filePath = await window.services.writeTextFile(text, filename);
         window.ztools?.showNotification?.(`Saved ${filename}`);
         return filePath;
     }
@@ -57,7 +57,7 @@ export default function (id) {
 
                 const name = state.tab.name || 'Untitled Project';
 
-                saveTextFile(JSON.stringify(state, null, 2), `${name}.json`);
+                void saveTextFile(JSON.stringify(state, null, 2), `${name}.json`);
             },
 
             /**
