@@ -1,0 +1,168 @@
+name: Build PR Plugin Package
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'plugins/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: '要构建的 PR 编号'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-plugin-build-${{ github.event_name == 'pull_request' && github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  build-pr-plugin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve PR metadata
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_PATH: ${{ github.event_path }}
+          INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process'
+          import { readFileSync, appendFileSync } from 'node:fs'
+
+          const eventName = process.env.EVENT_NAME
+          const outputPath = process.env.GITHUB_OUTPUT
+          let pullRequest
+
+          if (eventName === 'pull_request') {
+            const event = JSON.parse(readFileSync(process.env.EVENT_PATH, 'utf8'))
+            pullRequest = event.pull_request
+          } else {
+            const prNumber = process.env.INPUT_PR_NUMBER
+            if (!prNumber) {
+              throw new Error('workflow_dispatch requires pr_number')
+            }
+            const payload = execFileSync(
+              'gh',
+              ['api', `/repos/${process.env.REPOSITORY}/pulls/${prNumber}`],
+              { encoding: 'utf8' },
+            )
+            pullRequest = JSON.parse(payload)
+          }
+
+          const outputs = {
+            number: String(pullRequest.number),
+            head_repo: pullRequest.head.repo.full_name,
+            head_sha: pullRequest.head.sha,
+          }
+
+          appendFileSync(
+            outputPath,
+            Object.entries(outputs)
+              .map(([key, value]) => `${key}=${value}`)
+              .join('\n') + '\n',
+          )
+
+          console.log(`Resolved PR #${outputs.number}`)
+          console.log(`Head: ${outputs.head_repo}@${outputs.head_sha}`)
+          NODE
+
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.pr.outputs.head_repo }}
+          ref: ${{ steps.pr.outputs.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Detect changed plugins
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p release
+
+          changed_plugins=$(
+            gh api --paginate "/repos/${REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename' |
+            awk -F/ '/^plugins\/[^/]+\// {print $2}' |
+            sort -u |
+            paste -sd, -
+          )
+
+          if [ -z "${changed_plugins}" ]; then
+            echo "No plugin changes detected."
+            echo "has_changes=false" >> "${GITHUB_OUTPUT}"
+            node --input-type=module <<'NODE'
+            import { writeFileSync } from 'node:fs'
+
+            writeFileSync('release/build-info.json', JSON.stringify({
+              hasChanges: false,
+              releaseVersion: `pr-${process.env.PR_NUMBER}`,
+              changedPlugins: [],
+              buildAll: false,
+            }, null, 2))
+            NODE
+            exit 0
+          fi
+
+          echo "Changed plugins: ${changed_plugins}"
+          echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+          echo "changed_plugins=${changed_plugins}" >> "${GITHUB_OUTPUT}"
+
+          CHANGED_PLUGINS="${changed_plugins}" node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs'
+
+          writeFileSync('release/build-info.json', JSON.stringify({
+            hasChanges: true,
+            releaseVersion: `pr-${process.env.PR_NUMBER}`,
+            changedPlugins: process.env.CHANGED_PLUGINS.split(',').filter(Boolean),
+            buildAll: false,
+          }, null, 2))
+          NODE
+
+          cat release/build-info.json
+
+      - name: Install root dependencies
+        if: steps.detect.outputs.has_changes == 'true'
+        run: npm ci
+
+      - name: Build changed plugins
+        if: steps.detect.outputs.has_changes == 'true'
+        run: node scripts/build-plugins.js
+
+      - name: Upload plugin packages
+        if: steps.detect.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-${{ steps.pr.outputs.number }}-plugin-packages
+          path: |
+            release/*.zip
+            release/build-info.json
+            release/latest
+          if-no-files-found: error
+          retention-days: 14
