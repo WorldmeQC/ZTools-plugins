@@ -586,8 +586,8 @@ function isProcessAlive(pid) {
   }
 }
 
-function sleepSync(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function killPid(pid, signal) {
@@ -599,21 +599,21 @@ function killPid(pid, signal) {
   }
 }
 
-function waitForExit(pid, timeoutMs) {
+async function waitForExit(pid, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (!isProcessAlive(pid)) return true;
-    sleepSync(80);
+    await sleep(80);
   }
   return !isProcessAlive(pid);
 }
 
-function cleanupExistingClientProcesses(file) {
+async function cleanupExistingClientProcesses(file) {
   if (child && !child.killed) {
     const trackedPid = child.pid;
     terminateChild("启动前停止旧客户端进程", true);
     if (trackedPid) {
-      waitForExit(trackedPid, 1200);
+      await waitForExit(trackedPid, 1200);
     }
   }
 
@@ -624,7 +624,7 @@ function cleanupExistingClientProcesses(file) {
     killPid(pid, "SIGTERM");
   }
   for (const pid of pids) {
-    if (!waitForExit(pid, 1200)) {
+    if (!(await waitForExit(pid, 1200))) {
       killPid(pid, "SIGKILL");
     }
   }
@@ -659,7 +659,7 @@ async function start(key) {
   try {
     const runtime = await ensureClientRuntime();
     file = runtime.executable;
-    cleanupExistingClientProcesses(file);
+    await cleanupExistingClientProcesses(file);
   } catch (error) {
     state.status = "error";
     state.statusText = "错误";
